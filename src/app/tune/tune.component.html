@@ -1,0 +1,17 @@
+<div class="row h-100 align-items-stretch" *ngIf="tune">
+  <div class="col-4 d-flex flex-column">
+    <h2>Tune Detail:</h2>
+    <p>id: {{ tune.id }}</p>
+    <div class="row mb-3">
+      <button class="btn btn-primary" (click)="saveAbc()">Save</button>
+      <button class="btn btn-secondary" (click)="resetAbc()">Refresh</button>
+    </div>
+    <textarea class="w-100 flex-grow-1" #abcInputBox [(ngModel)]="currentAbcValue" (input)="onAbcInput(abcInputBox.value)"></textarea>
+  </div>
+  <div class="col">
+    <div id="abc-warnings"></div>
+    <div id="abc-paper">
+      <div class="text-center mt-5"><i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i></div>
+    </div>
+  </div>
+</div>

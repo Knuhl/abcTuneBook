@@ -1,0 +1,16 @@
+<div class="container-fluid h-100" *ngIf="tunebook">
+  <div class="row h-100">
+    <div class="col-2">
+      <h3>{{ tunebook.title }}</h3>
+      <ul class="list-group">
+        <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of tunebook.tunes" (click)="onSelect(tune)">
+          {{ tune.title }}
+        </li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <app-tune [tune]="selectedTune"></app-tune>
+    </div>
+  </div>
+</div>
