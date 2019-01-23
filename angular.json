@@ -27,9 +27,18 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "node_modules/@fortawesome/fontawesome-free/css/solid.min.css",
+              "node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css",
+              "src/sass/styles.scss"
             ],
-            "scripts": []
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/bootstrap/scss/"
+              ]
+            },
+            "scripts": [
+              "src/abcjs_basic_5.6.2-min.js"
+            ]
           },
           "configurations": {
             "production": {
