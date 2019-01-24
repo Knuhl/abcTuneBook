@@ -15,7 +15,7 @@ export class TuneComponent implements OnInit {
   private abcInputObservable: Observable<string>;
   currentAbcValue = '';
 
-  @HostBinding('class') hostClasses = 'flex-grow-1 row mx-0';
+  @HostBinding('class') hostClasses = 'flex-grow-1';
 
   constructor(private tuneService: TuneService) { }
 
@@ -54,7 +54,8 @@ export class TuneComponent implements OnInit {
       ABCJS.renderAbc(renderElement, abc,
       {
         responsive: 'resize',
-        warnings_id: 'abc-warnings'
+        warnings_id: 'abc-warnings',
+        paddingtop: 0,
       });
     } else {
       renderElement.innerHTML = spinnerHtml;

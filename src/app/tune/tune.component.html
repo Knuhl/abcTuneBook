@@ -2,27 +2,37 @@
 
 <ng-template #tuneTemplate>
 
-  <div class="col-lg-3">
-    <p>id: {{ tune.id }}</p>
-
-    <button class="btn btn-outline-success" (click)="saveAbc()">Save</button>
-    <button class="btn btn-outline-secondary" (click)="resetAbc()">Refresh</button>
-
-    <ngx-codemirror #abcInputBox [options]="{ lineNumbers: true }" [(ngModel)]="currentAbcValue" (input)="onAbcInput(abcInputBox.value)"></ngx-codemirror>
-  </div>
-  <div class="col">
-    <div id="abc-warnings"></div>
-    <div id="abc-paper">
-      <div class="text-center mt-5">
-        <i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i>
+  <div class="container-fluid pr-0">
+      <div class="row mx-5 my-2 mb-lg-0">
+          <button (click)="edit = edit ? false : true;" class="btn btn-outline-dark ml-auto" [ngClass]="{'active': edit}">
+            <i class="fas fa-pen mr-1"></i>Edit
+          </button>
       </div>
-    </div>
+
+      <div class="row">
+          <div class="col-lg-3 px-0" *ngIf="edit">
+              <p>id: {{ tune.id }}</p>
+          
+              <button class="btn btn-outline-success" (click)="saveAbc()">Save</button>
+              <button class="btn btn-outline-secondary" (click)="resetAbc()">Refresh</button>
+          
+              <ngx-codemirror #abcInputBox [options]="{ lineNumbers: true }" [(ngModel)]="currentAbcValue" (input)="onAbcInput(abcInputBox.value)"></ngx-codemirror>
+            </div>
+            <div class="col px-0">
+              <div id="abc-warnings"></div>
+              <div id="abc-paper">
+                <div class="text-center mt-5">
+                  <i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i>
+                </div>
+              </div>
+            </div>
+      </div>
   </div>
 
 </ng-template>
 
 <ng-template #noTuneTemplate>
-  <div class="col">
-    No Tune selected
-  </div>
+    <div class="text-center mt-lg-5 mt-2">
+        <p>No Tune selected</p>
+    </div>
 </ng-template>

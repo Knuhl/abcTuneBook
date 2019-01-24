@@ -43,3 +43,8 @@
 html, body {
   height: 100%;
 }
+
+.btn-noBorder:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
