@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, HostBinding } from '@angular/core';
 import { Tune } from '../../models/tune';
 import { Observable, Subject, pipe } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -14,6 +14,8 @@ export class TuneComponent implements OnInit {
   private abcInputSubject = new Subject<string>();
   private abcInputObservable: Observable<string>;
   currentAbcValue = '';
+
+  @HostBinding('class') hostClasses = 'flex-grow-1 row mx-0';
 
   constructor(private tuneService: TuneService) { }
 

@@ -4,7 +4,22 @@
 X:1
 T:Test
 K:C
-cdefg
+|:cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef|
+cdef|cdef:||
 
  X:
 T:Test 2

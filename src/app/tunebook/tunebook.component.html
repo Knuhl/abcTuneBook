@@ -1,16 +1,49 @@
-<div class="container-fluid h-100" *ngIf="tunebook">
-  <div class="row h-100">
-    <div class="col-2">
-      <h3>{{ tunebook.title }}</h3>
-      <ul class="list-group">
-        <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of tunebook.tunes" (click)="onSelect(tune)">
-          {{ tune.title }}
+<div class="p-0 m-0 d-flex flex-column">
+  <!-- container is column, has rows stretched to full-width -->
+  <!-- top-most, full-width -->
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="#">Brand</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapseContent"
+      aria-controls="navbarCollapseContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarCollapseContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            {{ tunebook?.title }}
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="#">New</a>
+            <div class="dropdown-divider"></div>
+            <!-- enumerate other tunebooks -->
+            <a class="dropdown-item" href="#">1</a>
+            <a class="dropdown-item" href="#">2</a>
+            <a class="dropdown-item" href="#">3</a>
+          </div>
         </li>
       </ul>
+      <button class="btn btn-outline-success btn-sm">Save all</button>
     </div>
+  </nav>
 
-    <div class="col">
-      <app-tune [tune]="selectedTune"></app-tune>
+
+  <div class="row">
+    <!-- fills the rest of the height, is row and has columns stretched to full height -->
+
+    <!-- left most, full-height -->
+    <ul class="list-group col-lg-2">
+      <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of tunebook?.tunes" (click)="onSelect(tune)">
+        {{ tune.title }}
+      </li>
+    </ul>
+
+    <!-- rest of width, full-height -->
+    <div class="flex-grow-1 d-flex">
+        <app-tune [tune]="selectedTune"></app-tune>
     </div>
   </div>
 </div>
