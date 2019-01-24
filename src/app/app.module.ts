@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
+import { CodemirrorModule } from '@ctrl/ngx-codemirror';
+
 import { AppComponent } from './app.component';
 import { TunebookComponent } from './tunebook/tunebook.component';
 import { TuneComponent } from './tune/tune.component';
@@ -16,7 +18,8 @@ import { TuneComponent } from './tune/tune.component';
   imports: [
     BrowserModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    CodemirrorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -29,6 +29,7 @@
             "styles": [
               "node_modules/@fortawesome/fontawesome-free/css/solid.min.css",
               "node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css",
+              "node_modules/codemirror/lib/codemirror.css",
               "src/sass/styles.scss"
             ],
             "stylePreprocessorOptions": {
@@ -37,7 +38,9 @@
               ]
             },
             "scripts": [
-              "src/abcjs_basic_5.6.2-min.js"
+              "node_modules/jquery/dist/jquery.min.js",
+              "node_modules/bootstrap/dist/js/bootstrap.min.js",
+              "src/assets/abcjs_basic_5.6.2-min.js"
             ]
           },
           "configurations": {
