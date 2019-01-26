@@ -1,4 +1,4 @@
-<div class="p-0 m-0 d-flex flex-column">
+<div class="p-0 m-0 d-flex flex-column h-100">
   <!-- container is column, has rows stretched to full-width -->
   <!-- top-most, full-width -->
   <!-- NAV -->
@@ -20,9 +20,8 @@
             <a class="dropdown-item" href="#" (click)="createTunebook()">New</a>
             <div class="dropdown-divider"></div>
             <!-- enumerate other tunebooks -->
-            <a *ngFor="let tunebookTitle of tunebookTitles" href="#"
-                class="dropdown-item" [class.active]="tunebookTitle.key === selectedTunebook?.id"
-                (click)="onSelectTunebook(tunebookTitle.key)">
+            <a *ngFor="let tunebookTitle of tunebookTitles" href="#" class="dropdown-item" [class.active]="tunebookTitle.key === selectedTunebook?.id"
+              (click)="onSelectTunebook(tunebookTitle.key)">
               {{ tunebookTitle.value }}
             </a>
           </div>
@@ -33,23 +32,23 @@
   </nav>
 
 
-  <div class="row mx-0">
+  <div class="row mx-0 h-100">
     <!-- fills the rest of the height, is row and has columns stretched to full height -->
 
     <!-- left most, full-height -->
-    <div class="col-lg-2 px-0">
-      <div class="d-flex flex-row">
-        <ul *ngIf="!listCollapsed" class="list-group flex-grow-1" id="tunesList">
-          <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of selectedTunebook?.tunes"
-            (click)="onSelect(tune)">
-            {{ tune.title }}
-          </li>
-        </ul>
-        <button class="btn btn-noBorder btn-light text-dark px-1" (click)="listCollapsed = listCollapsed ? false : true;">
-          <i class="fas" [class.fa-angle-double-right]="listCollapsed" [class.fa-angle-double-left]="!listCollapsed"></i>
-        </button>
-      </div>
+    <div *ngIf="!listCollapsed" class="col-lg-2 px-0 d-flex flex-row" #sidebar id="sidebar">
+
+      <ul class="list-group flex-grow-1" id="tunesList">
+        <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of selectedTunebook?.tunes"
+          (click)="onSelect(tune)">
+          {{ tune.title }}
+        </li>
+      </ul>
+
     </div>
+    <button class="btn btn-noBorder btn-light text-dark px-1" (click)="listCollapsed = listCollapsed ? false : true;">
+      <i class="fas" [class.fa-angle-double-right]="listCollapsed" [class.fa-angle-double-left]="!listCollapsed"></i>
+    </button>
 
     <!-- rest of width, full-height -->
     <div class="flex-grow-1 d-flex">
