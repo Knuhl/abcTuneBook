@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TuneService } from './tune.service';
+import { MessageService } from './message.service';
 
-describe('TuneService', () => {
+describe('MessageService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: TuneService = TestBed.get(TuneService);
+    const service: MessageService = TestBed.get(MessageService);
     expect(service).toBeTruthy();
   });
 });
