@@ -7,7 +7,7 @@ export class AppconfigurationService {
   baseUrl: string;
 
   constructor() {
-    // TODO: put config out of repo but configurable
+    // base-url for php-backend
     this.baseUrl = 'http://localhost/';
    }
 }
