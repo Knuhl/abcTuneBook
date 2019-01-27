@@ -39,14 +39,12 @@ export class TunebookComponent implements OnInit, AfterViewInit {
 
   onSelectTunebook(id: number): void {
     this.messageService.trace('Tunebook selected, id: ' + id);
-    if (id && id >= 0 && (!this.selectedTunebook || id !== this.selectedTunebook.id)) {
+    if (id && id >= 0) {
       this.messageService.trace('Getting Tunebook with id ' + id);
       this.tunebookService.getTunebook(id).subscribe(tunebook => {
         this.messageService.trace('Received Tunebook to id: ' + id, tunebook);
         this.selectedTunebook = tunebook;
       });
-    } else {
-      this.messageService.trace('Same Tunebook as before: ' + id);
     }
   }
 
@@ -56,6 +54,28 @@ export class TunebookComponent implements OnInit, AfterViewInit {
   }
 
   createTunebook(): void {
+    // TODO: create locally, on save -> insert
     this.messageService.trace('Creating new Tunebook');
+    this.tunebookService.createTunebook('(empty)', 'X:1\r\nT:Title\r\nK:E\r\ny\r\n\r\n')
+    .subscribe(id => {
+      if (id >= 0) {
+        this.getTunebookTitles();
+        this.onSelectTunebook(id);
+      }
+    });
+  }
+
+  saveTunebook(tunebook: Tunebook): void {
+    if (tunebook) {
+      this.messageService.trace('Saving Tunebook', tunebook);
+      this.tunebookService.updateTunebook(tunebook)
+      .subscribe(((result: any) => {
+        if (result) {
+          this.getTunebookTitles();
+          this.onSelectTunebook(tunebook.id);
+        }
+      }),
+      ((error: any) => this.messageService.error(error)));
+    }
   }
 }

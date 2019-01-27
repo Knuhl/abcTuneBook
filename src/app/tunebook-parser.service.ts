@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Tune } from 'src/models/tune';
+import { Tunebook } from 'src/models/tunebook';
 
 @Injectable({
   providedIn: 'root'
@@ -29,7 +30,7 @@ export class TunebookParserService {
         // ignore everything before the first 'X:'
         continue;
       }
-      currentTune += lines[i];
+      currentTune += lines[i] + '\r\n';
     }
     if (currentTune.length > 0) {
       currentTune = currentTune.trim();
@@ -48,5 +49,20 @@ export class TunebookParserService {
       const newTitle = this.parseTuneTitle(tune.abc);
       tune.title = newTitle;
     }
+  }
+
+  getTunebookAbc(tunebook: Tunebook): string {
+    if (!tunebook || !tunebook.tunes || tunebook.tunes.length < 1) {
+      return null;
+    }
+    let result = '';
+    for (let i = 0; i < tunebook.tunes.length; i++) {
+      const tune = tunebook.tunes[i];
+      if (!tune || !tune.abc) {
+        continue;
+      }
+      result += tune.abc.trim() + '\r\n\r\n';
+    }
+    return result;
   }
 }

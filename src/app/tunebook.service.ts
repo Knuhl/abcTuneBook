@@ -57,6 +57,39 @@ export class TunebookService {
     );
   }
 
+  createTunebook(title: string, abc: string): Observable<number> {
+    const url = this.config.baseUrl + 'api/tunebook/create.php';
+    const parameter = JSON.stringify({title: title, abc: abc});
+    this.messageService.trace('sending create request', url, parameter);
+    return this.http.post(url, parameter).pipe(
+      tap(r => this.messageService.trace('received HTTP Result for tunebook creation', r)),
+      catchError(this.handleError('createTunebook', [])),
+      map((result: any) => {
+        if (result && result.id && result.id >= 0) {
+          return result.id;
+        }
+        return -1;
+      })
+    );
+  }
+
+  updateTunebook(tunebook: Tunebook): Observable<boolean> {
+    const url = this.config.baseUrl + 'api/tunebook/update.php';
+    const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
+    const parameter = JSON.stringify({id: tunebook.id, title: tunebook.title, abc: tunebookAbc});
+    this.messageService.trace('sending update request', url, parameter);
+    return this.http.post(url, parameter).pipe(
+      tap(r => this.messageService.trace('received HTTP Result for tunebook update', r)),
+      catchError(this.handleError('updateTunebook', [])),
+      map((result: any) => {
+        if (result) {
+          return true;
+        }
+        return false;
+      })
+    );
+  }
+
   private handleError<T> (operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
       this.messageService.error(operation, error);
