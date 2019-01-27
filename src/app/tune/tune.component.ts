@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostBinding } from '@angular/core';
+import { Component, OnInit, Input, HostBinding, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import { Tune } from '../../models/tune';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { TunebookParserService } from '../tunebook-parser.service';
 })
 export class TuneComponent implements OnInit {
   @HostBinding('class') hostClasses = 'flex-grow-1';
+  @ViewChild('abcPaper') abcPaper: ElementRef;
 
   private abcInputSubject = new Subject<string>();
   private abcInputObservable: Observable<string>;
@@ -32,11 +33,11 @@ export class TuneComponent implements OnInit {
   }
   @Input()
   set tune(tune: Tune) {
-    this.renderAbc(null);
+    this._currentAbcValue = null;
+    this._tune = tune;
     if (tune) {
       this.currentAbcValue = tune.abc;
     }
-    this._tune = tune;
   }
 
   constructor(private messageService: MessageService, private tunebookService: TunebookService,
@@ -51,27 +52,21 @@ export class TuneComponent implements OnInit {
 
   renderAbc(abc: string) {
     this.messageService.trace('rendering abc with abcjs', abc);
-    const renderElement = document.getElementById('abc-paper');
-    if (!renderElement) {
-      if (abc) {
-        this.messageService.warn('DOM is not built yet, can\'t render abc, retrying after 0ms (begin invoke)', 'abc-paper');
-        setTimeout(() => this.renderAbc(abc), 0);
-      }
+    if (!this.abcPaper || !this.abcPaper.nativeElement) {
       return;
     }
     const spinnerHtml = '<div class="text-center mt-5"><i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i></div>';
     if (abc) {
-      renderElement.innerHTML = spinnerHtml;
+      this.abcPaper.nativeElement.innerHTML = spinnerHtml;
       this.messageService.trace('showing spinner, calling abcjs');
-      ABCJS.renderAbc(renderElement, abc,
+      ABCJS.renderAbc(this.abcPaper.nativeElement, abc,
       {
         responsive: 'resize',
-        warnings_id: 'abc-warnings',
         paddingtop: 0,
       });
     } else {
       this.messageService.trace('received empty abc-string, showing spinner');
-      renderElement.innerHTML = spinnerHtml;
+      this.abcPaper.nativeElement.innerHTML = spinnerHtml;
     }
   }
 

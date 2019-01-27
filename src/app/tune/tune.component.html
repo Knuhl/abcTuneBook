@@ -19,8 +19,7 @@
       <ngx-codemirror #abcInputBox [options]="{ lineNumbers: true }" [(ngModel)]="currentAbcValue"></ngx-codemirror>
     </div>
     <div class="col px-0">
-      <div id="abc-warnings"></div>
-      <div id="abc-paper">
+      <div #abcPaper>
         <div class="text-center mt-5">
           <i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i>
         </div>

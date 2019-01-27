@@ -1,5 +1,4 @@
 # ToDos
-* Use @ViewChild and AfterViewInit for abc-paper
 * Exclude DB- and Webhost-Configuration from repository
 * UPDATE and CREATE from (https://www.codeofaninja.com/2017/02/create-simple-rest-api-in-php.html)
 * Save Tunebook local
