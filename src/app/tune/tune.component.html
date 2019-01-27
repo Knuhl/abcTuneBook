@@ -11,10 +11,8 @@
 
   <div class="row">
     <div class="col-lg-3 px-0" *ngIf="edit">
-      <p>id: {{ tune.id }}</p>
-
-      <button class="btn btn-outline-success" (click)="saveAbc()">Save</button>
-      <button class="btn btn-outline-secondary" (click)="resetAbc()">Refresh</button>
+      <button class="btn btn-success" (click)="saveAbc()"><i class="fas fa-save mr-2"></i>Save to Book</button>
+      <button class="btn btn-secondary" (click)="resetAbc()"><i class="fas fa-redo mr-2"></i>Refresh from Book</button>
 
       <ngx-codemirror #abcInputBox [options]="{ lineNumbers: true }" [(ngModel)]="currentAbcValue"></ngx-codemirror>
     </div>

@@ -27,7 +27,6 @@
           </div>
         </li>
       </ul>
-      <button class="btn btn-outline-success btn-sm" (click)="saveTunebook(selectedTunebook)">Save Book</button>
     </div>
   </nav>
 
@@ -36,9 +35,35 @@
     <!-- fills the rest of the height, is row and has columns stretched to full height -->
 
     <!-- left most, full-height -->
-    <div *ngIf="!listCollapsed" class="col-lg-2 px-0 d-flex flex-row" #sidebar id="sidebar">
+    <div *ngIf="!listCollapsed && selectedTunebook" class="col-lg-2 px-0 d-flex flex-column" #sidebar id="sidebar">
+
+      <form (ngSubmit)="saveTunebook(selectedTunebook)" #tunebookForm="ngForm">
+
+        <div class="form-group">
+
+          <div [hidden]="title.valid || title.pristine" class="alert alert-danger">
+            Title is required
+          </div>
+
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="tunebookTitleHelp">Tunebook</span>
+            </div>
+            <input type="text" class="form-control" id="tunebookTitleInput" placeholder="Enter Tunebook Title"
+              aria-describedby="tunebookTitleHelp" required name="title" [(ngModel)]="selectedTunebook.title" #title="ngModel">
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-success" [disabled]="!tunebookForm.form.valid"><i class="fas fa-save mr-2"></i>Save book</button>
+
+      </form>
 
       <ul class="list-group flex-grow-1" id="tunesList">
+        <li class="list-group-item list-group-item-secondary">
+          TODO Complete Book
+        </li>
+
         <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of selectedTunebook?.tunes"
           (click)="onSelect(tune)">
           {{ tune.title }}
