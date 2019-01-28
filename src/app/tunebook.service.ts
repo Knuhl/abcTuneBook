@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { Tunebook } from 'src/models/tunebook';
-import { KeyValue } from '@angular/common';
 import { AppconfigurationService } from './appconfiguration.service';
 import { MessageService } from './message.service';
 import { TunebookParserService } from './tunebook-parser.service';
@@ -18,25 +17,21 @@ export class TunebookService {
     private http: HttpClient,
     private config: AppconfigurationService) { }
 
-  getTunebookTitles(): Observable<KeyValue<number, string>[]> {
+  getTunebookTitles(): Observable<Tunebook[]> {
     const url = this.config.baseUrl + 'api/tunebook/read.php';
     this.messageService.trace('reading tunebook titles from ' +  url);
     return this.http.get(url).pipe(
       tap(r => this.messageService.trace('received HTTP Result for tunebook titles', r)),
       catchError(this.handleError('getTunebookTitles', [])),
       map((result: any) => {
-        const r = [];
         if (result.records) {
-          return result.records.map((v: any) => ({key: v.id, value: v.title}));
+          return result.records.map((v: any) => new Tunebook(v.id, v.title, []));
         } else {
           this.messageService.warn('received empty tunebook titles result');
         }
-        return r;
+        return [];
       })
     );
-    // return this.http.get('/assets/tuneBook.abc', { responseType: 'text' }).pipe(
-    //   map((s: string) => this.createTunebook(s)),
-    // );
   }
 
   getTunebook(id: number): Observable<Tunebook> {
@@ -57,23 +52,27 @@ export class TunebookService {
     );
   }
 
-  createTunebook(title: string, abc: string): Observable<number> {
+  createTunebook(tunebook: Tunebook): Observable<number> {
     const url = this.config.baseUrl + 'api/tunebook/create.php';
-    const parameter = JSON.stringify({title: title, abc: abc});
+    const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
+    const parameter = JSON.stringify({title: tunebook.title, abc: tunebookAbc});
     this.messageService.trace('sending create request', url, parameter);
     return this.http.post(url, parameter).pipe(
       tap(r => this.messageService.trace('received HTTP Result for tunebook creation', r)),
       catchError(this.handleError('createTunebook', [])),
       map((result: any) => {
         if (result && result.id && result.id >= 0) {
+          tunebook.onlyLocal = false;
+          tunebook.abcLoaded = true;
+          tunebook.id = result.id;
           return result.id;
         }
-        return -1;
+        throw new Error('received invalid id from tunebook-creation');
       })
     );
   }
 
-  updateTunebook(tunebook: Tunebook): Observable<boolean> {
+  updateTunebook(tunebook: Tunebook): Observable<any> {
     const url = this.config.baseUrl + 'api/tunebook/update.php';
     const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
     const parameter = JSON.stringify({id: tunebook.id, title: tunebook.title, abc: tunebookAbc});
@@ -83,9 +82,26 @@ export class TunebookService {
       catchError(this.handleError('updateTunebook', [])),
       map((result: any) => {
         if (result) {
+          tunebook.abcLoaded = true;
           return true;
         }
-        return false;
+        throw new Error('update of tunebook with id ' + tunebook.id + ' failed');
+      })
+    );
+  }
+
+  deleteTunebook(id: number): Observable<any> {
+    const url = this.config.baseUrl + 'api/tunebook/delete.php';
+    const parameter = JSON.stringify({id: id});
+    this.messageService.trace('sending delete request', url, parameter);
+    return this.http.post(url, parameter).pipe(
+      tap(r => this.messageService.trace('received HTTP Result for tunebook deletion', r)),
+      catchError(this.handleError('deleteTunebook', [])),
+      map((result: any) => {
+        if (result) {
+          return true;
+        }
+        throw new Error('deletion of tunebook with id ' + id + ' failed');
       })
     );
   }

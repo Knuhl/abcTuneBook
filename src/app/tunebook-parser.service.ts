@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Tune } from 'src/models/tune';
 import { Tunebook } from 'src/models/tunebook';
+import { empty } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,6 @@ export class TunebookParserService {
     const lines = abc.replace('\r\n', '\n').split('\n');
     const tunes = [];
     let currentTune = '';
-    let tuneId = NaN;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (line.length < 1) {
@@ -22,10 +22,9 @@ export class TunebookParserService {
       if (line.toUpperCase().startsWith('X:')) {
         if (currentTune.length > 0) {
           currentTune = currentTune.trim();
-          tunes.push(new Tune(tuneId, this.parseTuneTitle(currentTune), currentTune));
+          tunes.push(new Tune(this.parseTuneTitle(currentTune), currentTune));
         }
         currentTune = '';
-        tuneId = parseInt(line.substring('X:'.length).trim(), 10);
       } else if (currentTune.length === 0) {
         // ignore everything before the first 'X:'
         continue;
@@ -34,21 +33,9 @@ export class TunebookParserService {
     }
     if (currentTune.length > 0) {
       currentTune = currentTune.trim();
-      tunes.push(new Tune(tuneId, this.parseTuneTitle(currentTune), currentTune));
+      tunes.push(new Tune(this.parseTuneTitle(currentTune), currentTune));
     }
     return tunes;
-  }
-
-  parseTuneTitle(abc: string): string {
-    const header = ABCJS.parseOnly(abc, { header_only: true });
-    return header.length > 0 && header[0].metaText.title ? header[0].metaText.title : '(no title)';
-  }
-
-  updateTitle(tune: Tune): void {
-    if (tune) {
-      const newTitle = this.parseTuneTitle(tune.abc);
-      tune.title = newTitle;
-    }
   }
 
   getTunebookAbc(tunebook: Tunebook): string {
@@ -64,5 +51,34 @@ export class TunebookParserService {
       result += tune.abc.trim() + '\r\n\r\n';
     }
     return result;
+  }
+
+  parseTuneTitle(abc: string): string {
+    const header = ABCJS.parseOnly(abc, { header_only: true });
+    return header.length > 0 && header[0].metaText.title ? header[0].metaText.title : '(no title)';
+  }
+
+  updateTitle(tune: Tune): void {
+    if (tune) {
+      const newTitle = this.parseTuneTitle(tune.abc);
+      tune.title = newTitle;
+    }
+  }
+
+  createTune(tunebook: Tunebook, title?: string, abc?: string) {
+    if (!tunebook) { return; }
+    if (!title || title.length < 1) { title = '(no name)'; }
+    if (!abc || abc.length < 1) {
+      abc = [
+        'X:',
+        'T:(no name)',
+        'L:1/4',
+        'Q:120',
+        'K:C',
+        'y'].join('\r\n');
+    }
+    const newTune = new Tune(title, abc);
+    tunebook.tunes.push(newTune);
+    return newTune;
   }
 }

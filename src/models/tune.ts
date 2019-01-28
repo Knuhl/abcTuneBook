@@ -1,10 +1,8 @@
 export class Tune {
-    id: number;
     title: string;
     abc: string;
 
-    constructor(id: number, title: string, abc: string) {
-        this.id = id;
+    constructor(title: string, abc: string) {
         this.title = title;
         this.abc = abc;
     }

@@ -8,12 +8,14 @@ import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 import { AppComponent } from './app.component';
 import { TunebookComponent } from './tunebook/tunebook.component';
 import { TuneComponent } from './tune/tune.component';
+import { TunebooksListComponent } from './tunebooks-list/tunebooks-list.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     TunebookComponent,
-    TuneComponent
+    TuneComponent,
+    TunebooksListComponent
   ],
   imports: [
     BrowserModule,

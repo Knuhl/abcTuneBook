@@ -1,83 +1,62 @@
-<div class="p-0 m-0 d-flex flex-column h-100">
-  <!-- container is column, has rows stretched to full-width -->
-  <!-- top-most, full-width -->
-  <!-- NAV -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Brand</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapseContent"
-      aria-controls="navbarCollapseContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<!-- fills the rest of the height, is row and has columns stretched to full height -->
 
-    <div class="collapse navbar-collapse" id="navbarCollapseContent">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
-            {{ selectedTunebook?.title }}
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="#" (click)="createTunebook()">New</a>
-            <div class="dropdown-divider"></div>
-            <!-- enumerate other tunebooks -->
-            <a *ngFor="let tunebookTitle of tunebookTitles" href="#" class="dropdown-item" [class.active]="tunebookTitle.key === selectedTunebook?.id"
-              (click)="onSelectTunebook(tunebookTitle.key)">
-              {{ tunebookTitle.value }}
-            </a>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </nav>
+<!-- left most, full-height -->
+<div *ngIf="!listCollapsed && selectedTunebook" class="col-lg-2 px-0 d-flex flex-column">
 
+  <form #tunebookForm="ngForm">
 
-  <div class="row mx-0 h-100">
-    <!-- fills the rest of the height, is row and has columns stretched to full height -->
+    <div class="form-group my-0">
 
-    <!-- left most, full-height -->
-    <div *ngIf="!listCollapsed && selectedTunebook" class="col-lg-2 px-0 d-flex flex-column" #sidebar id="sidebar">
+      <div [hidden]="title.valid || title.pristine" class="alert alert-danger my-0">
+        Title is required
+      </div>
 
-      <form (ngSubmit)="saveTunebook(selectedTunebook)" #tunebookForm="ngForm">
+      <div [hidden]="selectedTunebook.tunes.length > 0" class="alert alert-danger my-0">
+        No Tunes
+      </div>
 
-        <div class="form-group">
-
-          <div [hidden]="title.valid || title.pristine" class="alert alert-danger">
-            Title is required
-          </div>
-
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="tunebookTitleHelp">Tunebook</span>
-            </div>
-            <input type="text" class="form-control" id="tunebookTitleInput" placeholder="Enter Tunebook Title"
-              aria-describedby="tunebookTitleHelp" required name="title" [(ngModel)]="selectedTunebook.title" #title="ngModel">
-          </div>
-
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="tunebookTitleHelp">Title</span>
         </div>
-
-        <button type="submit" class="btn btn-success" [disabled]="!tunebookForm.form.valid"><i class="fas fa-save mr-2"></i>Save book</button>
-
-      </form>
-
-      <ul class="list-group flex-grow-1" id="tunesList">
-        <li class="list-group-item list-group-item-secondary">
-          TODO Complete Book
-        </li>
-
-        <li class="list-group-item" [class.active]="tune === selectedTune" *ngFor="let tune of selectedTunebook?.tunes"
-          (click)="onSelect(tune)">
-          {{ tune.title }}
-        </li>
-      </ul>
+        <input type="text" class="form-control" id="tunebookTitleInput" placeholder="Enter Tunebook Title"
+          aria-describedby="tunebookTitleHelp" required name="title" [(ngModel)]="selectedTunebook.title" #title="ngModel">
+      </div>
 
     </div>
-    <button class="btn btn-noBorder btn-light text-dark px-1" (click)="listCollapsed = listCollapsed ? false : true;">
-      <i class="fas" [class.fa-angle-double-right]="listCollapsed" [class.fa-angle-double-left]="!listCollapsed"></i>
+
+    <button type="submit" class="btn btn-success btn-block" [disabled]="!tunebookForm.form.valid || selectedTunebook.tunes.length < 1"
+      (click)="saveTunebook(selectedTunebook)">
+      <i class="fas fa-save mr-2"></i>Save book
     </button>
 
-    <!-- rest of width, full-height -->
-    <div class="flex-grow-1 d-flex">
-      <app-tune [tune]="selectedTune"></app-tune>
-    </div>
-  </div>
+    <button type="button" class="btn btn-block btn-info" (click)="createTune()">New Tune</button>
+
+  </form>
+
+  <ul class="list-group flex-grow-1" id="tunesList">
+    <li *ngIf="selectedTunebook" class="list-group-item list-group-item-action list-group-item-dark" [class.active]="tunebookTune && tunebookTune === selectedTune"
+      (click)="showTunebookTune()">
+      Tunebook "{{ selectedTunebook.title }}"
+    </li>
+
+
+
+    <li class="list-group-item list-group-item-action" [class.active]="tune === selectedTune" *ngFor="let tune of selectedTunebook?.tunes"
+      (click)="selectTune(tune)">
+      <div class="d-flex flex-row">
+        <div class="flex-grow-1 align-self-center">{{ tune.title }}</div>
+        <button class="btn btn-danger" (click)="deleteTune(tune)"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    </li>
+  </ul>
+
+</div>
+<button class="btn btn-noBorder btn-light text-dark px-1" (click)="listCollapsed = listCollapsed ? false : true;">
+  <i class="fas" [class.fa-angle-double-right]="listCollapsed" [class.fa-angle-double-left]="!listCollapsed"></i>
+</button>
+
+<!-- rest of width, full-height -->
+<div class="flex-grow-1 d-flex">
+  <app-tune [tune]="selectedTune"></app-tune>
 </div>

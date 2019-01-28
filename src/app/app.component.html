@@ -1,1 +1,9 @@
-<app-tunebook class="h-100"></app-tunebook>
+<div class="p-0 m-0 d-flex flex-column h-100">
+    <!-- container is column, has rows stretched to full-width -->
+    <!-- top-most, full-width -->
+    <!-- NAV -->
+    <app-tunebooks-list (tunebookSelected)="selectedTunebook = $event"></app-tunebooks-list>
+
+    <app-tunebook class="row mx-0 h-100" [selectedTunebook]="selectedTunebook"></app-tunebook>
+
+</div>

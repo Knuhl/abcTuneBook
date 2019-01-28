@@ -1,81 +1,74 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Tune } from '../../models/tune';
 import { Tunebook } from 'src/models/tunebook';
-import { KeyValue } from '@angular/common';
 import { MessageService } from '../message.service';
 import { TunebookService } from '../tunebook.service';
+import { TunebookParserService } from '../tunebook-parser.service';
 
 @Component({
   selector: 'app-tunebook',
   templateUrl: './tunebook.component.html',
   styleUrls: ['./tunebook.component.scss']
 })
-export class TunebookComponent implements OnInit, AfterViewInit {
-  tunebookTitles: KeyValue<number, string>[];
-  selectedTunebook: Tunebook;
+export class TunebookComponent implements OnInit {
+  private _selectedTunebook: Tunebook;
+  @Input('selectedTunebook') set selectedTunebook(value: Tunebook) {
+    this._selectedTunebook = value;
+    this.messageService.trace('selected tunebook', value);
+  }
+  get selectedTunebook(): Tunebook {
+    return this._selectedTunebook;
+  }
+
+  listCollapsed: boolean;
+  tunebookTune: Tune;
   selectedTune: Tune;
 
-  @ViewChild('sidebar') sidebar: ElementRef;
-
-  constructor(private messageService: MessageService, private tunebookService: TunebookService) { }
+  constructor(
+    private messageService: MessageService,
+    private tunebookService: TunebookService,
+    private parser: TunebookParserService) { }
 
   ngOnInit() {
-    this.getTunebookTitles();
   }
 
-  ngAfterViewInit(): void { }
-
-  getTunebookTitles() {
-    this.messageService.trace('Getting Tunebook Titles');
-    this.tunebookService.getTunebookTitles().subscribe(titles => {
-      this.messageService.trace('Received Tunebook Titles', titles);
-      this.tunebookTitles = titles;
-
-      if (!this.selectedTunebook && titles.length > 0) {
-        this.onSelectTunebook(titles[0].key);
-      }
-    });
-  }
-
-  onSelectTunebook(id: number): void {
-    this.messageService.trace('Tunebook selected, id: ' + id);
-    if (id && id >= 0) {
-      this.messageService.trace('Getting Tunebook with id ' + id);
-      this.tunebookService.getTunebook(id).subscribe(tunebook => {
-        this.messageService.trace('Received Tunebook to id: ' + id, tunebook);
-        this.selectedTunebook = tunebook;
-      });
-    }
-  }
-
-  onSelect(tune: Tune): void {
+  selectTune(tune: Tune): void {
     this.messageService.trace('Tune selected', tune);
     this.selectedTune = tune;
   }
 
-  createTunebook(): void {
-    // TODO: create locally, on save -> insert
-    this.messageService.trace('Creating new Tunebook');
-    this.tunebookService.createTunebook('(empty)', 'X:1\r\nT:Title\r\nK:E\r\ny\r\n\r\n')
-    .subscribe(id => {
-      if (id >= 0) {
-        this.getTunebookTitles();
-        this.onSelectTunebook(id);
-      }
-    });
+  showTunebookTune() {
+    const abc = this.parser.getTunebookAbc(this.selectedTunebook);
+    this.tunebookTune = new Tune(this.selectedTunebook.title, abc);
+    this.selectTune(this.tunebookTune);
+  }
+
+  createTune() {
+    if (!this._selectedTunebook) { return; }
+    const newTune = this.parser.createTune(this._selectedTunebook);
+    this.selectTune(newTune);
+  }
+
+  deleteTune(tune: Tune) {
+    if (!tune || !this.selectedTunebook) { return; }
+    const i = this.selectedTunebook.tunes.indexOf(tune);
+    if (i < 0) { return; }
+    this.selectedTunebook.tunes.splice(i, 1);
+    this.selectTune(null);
   }
 
   saveTunebook(tunebook: Tunebook): void {
     if (tunebook) {
       this.messageService.trace('Saving Tunebook', tunebook);
-      this.tunebookService.updateTunebook(tunebook)
-      .subscribe(((result: any) => {
-        if (result) {
-          this.getTunebookTitles();
-          this.onSelectTunebook(tunebook.id);
-        }
-      }),
-      ((error: any) => this.messageService.error(error)));
+      if (tunebook.onlyLocal) {
+        // insert
+        this.tunebookService.createTunebook(tunebook)
+          .subscribe((result: number) => this.messageService.trace('Tunebook inserted to id ' + result));
+      } else {
+        // update
+        this.tunebookService.updateTunebook(tunebook)
+          .subscribe((_ => this.messageService.trace('tunebook updated')));
+      }
     }
   }
 }
