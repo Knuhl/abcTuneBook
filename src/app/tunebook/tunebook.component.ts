@@ -55,6 +55,7 @@ export class TunebookComponent implements OnInit {
     if (i < 0) { return; }
     this.selectedTunebook.tunes.splice(i, 1);
     this.selectTune(null);
+    this.messageService.info('Tune deleted');
   }
 
   saveTunebook(tunebook: Tunebook): void {
@@ -63,11 +64,14 @@ export class TunebookComponent implements OnInit {
       if (tunebook.onlyLocal) {
         // insert
         this.tunebookService.createTunebook(tunebook)
-          .subscribe((result: number) => this.messageService.trace('Tunebook inserted to id ' + result));
+          .subscribe((result: number) => {
+            this.messageService.trace('Tunebook inserted to id ' + result);
+            this.messageService.info('Tunebook created');
+          });
       } else {
         // update
         this.tunebookService.updateTunebook(tunebook)
-          .subscribe((_ => this.messageService.trace('tunebook updated')));
+          .subscribe((_ => this.messageService.info('Tunebook updated')));
       }
     }
   }

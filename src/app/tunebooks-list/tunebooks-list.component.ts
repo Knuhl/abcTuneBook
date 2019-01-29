@@ -23,7 +23,7 @@ export class TunebooksListComponent implements OnInit {
   getTunebookTitles() {
     this.messageService.trace('Getting Tunebook Titles');
     this.tunebookService.getTunebookTitles().subscribe(titles => {
-      this.messageService.trace('Received Tunebook Titles', titles);
+      this.messageService.info('Received ' + titles.length + ' Tunebook Titles', titles);
       this.tunebooks = titles;
 
       if (!this.selectedTunebook && titles.length > 0) {
@@ -38,7 +38,7 @@ export class TunebooksListComponent implements OnInit {
     if (book && !book.onlyLocal && !book.abcLoaded) {
       this.messageService.trace('Getting Tunebook from API', book);
       this.tunebookService.getTunebook(book.id).subscribe(dbTunebook => {
-        this.messageService.trace('Received Tunebook to id: ' + book.id, dbTunebook);
+        this.messageService.info('Tunebook "' + dbTunebook.title + '" loaded', book.id, dbTunebook);
         dbTunebook.abcLoaded = true;
         const i = this.tunebooks.findIndex(b => b === book);
         this.tunebooks[i] = dbTunebook;
@@ -77,7 +77,6 @@ export class TunebooksListComponent implements OnInit {
     if (!tunebook.onlyLocal) {
       this.tunebookService.deleteTunebook(tunebook.id)
         .subscribe(_ => {
-          this.messageService.trace('tunebook deleted', tunebook);
           this.removeTunebookFromList(tunebook);
         });
     } else {
@@ -86,6 +85,7 @@ export class TunebooksListComponent implements OnInit {
   }
 
   removeTunebookFromList(tunebook: Tunebook) {
+    this.messageService.info('Tunebook "' + tunebook.title + '" deleted', tunebook);
     const i = this.tunebooks.indexOf(tunebook);
     if (i >= 0) {
       this.tunebooks.splice(i, 1);

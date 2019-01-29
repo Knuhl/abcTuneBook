@@ -31,7 +31,9 @@
 @import "media";
 @import "list-group";
 @import "close";
-@import "toasts";
+//bootstrap toasts interfere with ngx-toastr, both use the .toast-class
+// https://stackoverflow.com/questions/53989445/ngx-toastr-toast-not-showing-in-angular-7#
+//@import "toasts";
 @import "modal";
 @import "tooltip";
 @import "popover";
@@ -39,6 +41,8 @@
 @import "spinners";
 @import "utilities";
 @import "print";
+
+@import '~ngx-toastr/toastr-bs4-alert';
 
 html, body {
   height: 100%;
