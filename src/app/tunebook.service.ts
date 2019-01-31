@@ -53,7 +53,7 @@ export class TunebookService {
   }
 
   createTunebook(tunebook: Tunebook): Observable<number> {
-    const url = this.config.baseUrl + 'api/tunebook/creae.php';
+    const url = this.config.baseUrl + 'api/tunebook/create.php';
     const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
     const parameter = JSON.stringify({ title: tunebook.title, abc: tunebookAbc });
     this.messageService.trace('sending create request', url, parameter);
@@ -85,7 +85,7 @@ export class TunebookService {
   }
 
   deleteTunebook(id: number): Observable<any> {
-    const url = this.config.baseUrl + 'api/tunebook/delee.php';
+    const url = this.config.baseUrl + 'api/tunebook/delete.php';
     const parameter = JSON.stringify({ id: id });
     this.messageService.trace('sending delete request', url, parameter);
     return this.http.post(url, parameter).pipe(
