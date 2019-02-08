@@ -14,18 +14,18 @@ import { TunebookService } from '../services/tunebook.service';
 export class TuneComponent implements OnInit {
   @HostBinding('class') hostClasses = 'flex-grow-1';
 
+  edit = false;
+  tune: Tune;
   showSpinner = true;
   paperIds: string[];
 
   private abcInput = new Subject<string>();
 
-  private tune: Tune;
   private _currentAbcValue = '';
   get currentAbcValue() {
     return this._currentAbcValue;
   }
   set currentAbcValue(abc: string) {
-    console.log('got', JSON.stringify(abc));
     this._currentAbcValue = abc.replace(/\r/g, '').trim();
     this.abcInput.next(this._currentAbcValue);
   }
@@ -43,9 +43,9 @@ export class TuneComponent implements OnInit {
         this.currentAbcValue = t.abc;
       }
     });
-   }
+  }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   renderAbc(abc: string) {
     this.messageService.trace('rendering abc with abcjs', abc);

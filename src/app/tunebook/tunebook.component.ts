@@ -11,7 +11,7 @@ import { TunebookService } from '../services/tunebook.service';
   styleUrls: ['./tunebook.component.scss']
 })
 export class TunebookComponent implements OnInit {
-  private selectedTunebook: Tunebook;
+  selectedTunebook: Tunebook;
 
   listCollapsed: boolean;
   tunebookTune: Tune;

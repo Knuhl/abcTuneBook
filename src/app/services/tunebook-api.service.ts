@@ -5,6 +5,7 @@ import { map, catchError, tap } from 'rxjs/operators';
 import { AppconfigurationService } from './appconfiguration.service';
 import { MessageService } from './message.service';
 import { Tunebook } from '../models/tunebook';
+import * as _ from 'underscore';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,7 @@ export class TunebookApiService {
       catchError(this.handleError('getTunebookTitles')),
       map((result: any) => {
         if (result.records) {
-          return result.records.map((v: any) => new Tunebook(v.id, v.title, ''));
+          return result.records.map((v: any) => new Tunebook(v.id, _.unescape(v.title), ''));
         } else {
           this.messageService.warn('received empty tunebook titles result');
         }
@@ -41,7 +42,7 @@ export class TunebookApiService {
       map((result: any) => {
         if (result.records && result.records.length > 0) {
           const tunebook = result.records[0];
-          return new Tunebook(tunebook.id, tunebook.title, tunebook.abc);
+          return new Tunebook(tunebook.id, _.unescape(tunebook.title), _.unescape(tunebook.abc));
         } else {
           this.messageService.warn('received empty (single) tunebook result');
         }
