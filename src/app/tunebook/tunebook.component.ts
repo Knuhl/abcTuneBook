@@ -1,9 +1,9 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Tune } from '../../models/tune';
-import { Tunebook } from 'src/models/tunebook';
-import { MessageService } from '../message.service';
-import { TunebookService } from '../tunebook.service';
-import { TunebookParserService } from '../tunebook-parser.service';
+import { Component, OnInit } from '@angular/core';
+import { MessageService } from '../services/message.service';
+import { TunebookParserService } from '../services/tunebook-parser.service';
+import { Tunebook } from '../models/tunebook';
+import { Tune } from '../models/tune';
+import { TunebookService } from '../services/tunebook.service';
 
 @Component({
   selector: 'app-tunebook',
@@ -11,14 +11,7 @@ import { TunebookParserService } from '../tunebook-parser.service';
   styleUrls: ['./tunebook.component.scss']
 })
 export class TunebookComponent implements OnInit {
-  private _selectedTunebook: Tunebook;
-  @Input('selectedTunebook') set selectedTunebook(value: Tunebook) {
-    this._selectedTunebook = value;
-    this.messageService.trace('selected tunebook', value);
-  }
-  get selectedTunebook(): Tunebook {
-    return this._selectedTunebook;
-  }
+  private selectedTunebook: Tunebook;
 
   listCollapsed: boolean;
   tunebookTune: Tune;
@@ -26,26 +19,26 @@ export class TunebookComponent implements OnInit {
 
   constructor(
     private messageService: MessageService,
-    private tunebookService: TunebookService,
-    private parser: TunebookParserService) { }
+    private parser: TunebookParserService,
+    private tunebookService: TunebookService) {
+    this.tunebookService.currentTunebook.subscribe(tb => this.selectedTunebook = tb);
+    this.tunebookService.currentTune.subscribe(t => this.selectedTune = t);
+  }
 
   ngOnInit() {
   }
 
   selectTune(tune: Tune): void {
-    this.messageService.trace('Tune selected', tune);
-    this.selectedTune = tune;
+    this.tunebookService.setTune(tune);
   }
 
   showTunebookTune() {
-    const abc = this.parser.getTunebookAbc(this.selectedTunebook);
-    this.tunebookTune = new Tune(this.selectedTunebook.title, abc);
-    this.selectTune(this.tunebookTune);
+    this.tunebookService.setTuneToTunebookTune();
   }
 
   createTune() {
-    if (!this._selectedTunebook) { return; }
-    const newTune = this.parser.createTune(this._selectedTunebook);
+    if (!this.selectedTunebook) { return; }
+    const newTune = this.parser.createTune(this.selectedTunebook);
     this.selectTune(newTune);
   }
 
@@ -58,21 +51,7 @@ export class TunebookComponent implements OnInit {
     this.messageService.info('Tune deleted');
   }
 
-  saveTunebook(tunebook: Tunebook): void {
-    if (tunebook) {
-      this.messageService.trace('Saving Tunebook', tunebook);
-      if (tunebook.onlyLocal) {
-        // insert
-        this.tunebookService.createTunebook(tunebook)
-          .subscribe((result: number) => {
-            this.messageService.trace('Tunebook inserted to id ' + result);
-            this.messageService.info('Tunebook created');
-          });
-      } else {
-        // update
-        this.tunebookService.updateTunebook(tunebook)
-          .subscribe((_ => this.messageService.info('Tunebook updated')));
-      }
-    }
+  saveTunebook(): void {
+    this.tunebookService.saveCurrentTunebook();
   }
 }

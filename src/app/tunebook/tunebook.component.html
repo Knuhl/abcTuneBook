@@ -26,7 +26,7 @@
     </div>
 
     <button type="submit" class="btn btn-success btn-block" [disabled]="!tunebookForm.form.valid || selectedTunebook.tunes.length < 1"
-      (click)="saveTunebook(selectedTunebook)">
+      (click)="saveTunebook()">
       <i class="fas fa-save mr-2"></i>Save book
     </button>
 
@@ -35,7 +35,7 @@
   </form>
 
   <ul class="list-group flex-grow-1" id="tunesList">
-    <li *ngIf="selectedTunebook" class="list-group-item list-group-item-action list-group-item-dark" [class.active]="tunebookTune && tunebookTune === selectedTune"
+    <li *ngIf="selectedTunebook" class="list-group-item list-group-item-action list-group-item-dark" [class.active]="selectedTune && selectedTune.isTunebookTune"
       (click)="showTunebookTune()">
       Tunebook "{{ selectedTunebook.title }}"
     </li>
@@ -58,5 +58,5 @@
 
 <!-- rest of width, full-height -->
 <div class="flex-grow-1 d-flex">
-  <app-tune [tune]="selectedTune"></app-tune>
+  <app-tune></app-tune>
 </div>

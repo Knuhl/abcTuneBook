@@ -2,18 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { Tunebook } from 'src/models/tunebook';
 import { AppconfigurationService } from './appconfiguration.service';
 import { MessageService } from './message.service';
-import { TunebookParserService } from './tunebook-parser.service';
+import { Tunebook } from '../models/tunebook';
 
 @Injectable({
   providedIn: 'root'
 })
-export class TunebookService {
+export class TunebookApiService {
 
   constructor(private messageService: MessageService,
-    private tuneParser: TunebookParserService,
     private http: HttpClient,
     private config: AppconfigurationService) { }
 
@@ -25,7 +23,7 @@ export class TunebookService {
       catchError(this.handleError('getTunebookTitles')),
       map((result: any) => {
         if (result.records) {
-          return result.records.map((v: any) => new Tunebook(v.id, v.title, []));
+          return result.records.map((v: any) => new Tunebook(v.id, v.title, ''));
         } else {
           this.messageService.warn('received empty tunebook titles result');
         }
@@ -43,7 +41,7 @@ export class TunebookService {
       map((result: any) => {
         if (result.records && result.records.length > 0) {
           const tunebook = result.records[0];
-          return new Tunebook(tunebook.id, tunebook.title, this.tuneParser.parseTunes(tunebook.abc));
+          return new Tunebook(tunebook.id, tunebook.title, tunebook.abc);
         } else {
           this.messageService.warn('received empty (single) tunebook result');
         }
@@ -54,8 +52,7 @@ export class TunebookService {
 
   createTunebook(tunebook: Tunebook): Observable<number> {
     const url = this.config.baseUrl + 'api/tunebook/create.php';
-    const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
-    const parameter = JSON.stringify({ title: tunebook.title, abc: tunebookAbc });
+    const parameter = JSON.stringify({ title: tunebook.title, abc: tunebook.abc });
     this.messageService.trace('sending create request', url, parameter);
     return this.http.post(url, parameter).pipe(
       tap(r => this.messageService.trace('received HTTP Result for tunebook creation', r)),
@@ -74,8 +71,7 @@ export class TunebookService {
 
   updateTunebook(tunebook: Tunebook): Observable<any> {
     const url = this.config.baseUrl + 'api/tunebook/update.php';
-    const tunebookAbc = this.tuneParser.getTunebookAbc(tunebook);
-    const parameter = JSON.stringify({ id: tunebook.id, title: tunebook.title, abc: tunebookAbc });
+    const parameter = JSON.stringify({ id: tunebook.id, title: tunebook.title, abc: tunebook.abc });
     this.messageService.trace('sending update request', url, parameter);
     return this.http.post(url, parameter).pipe(
       tap(r => this.messageService.trace('received HTTP Result for tunebook update', r)),

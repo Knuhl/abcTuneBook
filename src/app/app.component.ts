@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { Tunebook } from 'src/models/tunebook';
 
 @Component({
   selector: 'app-root',
@@ -8,5 +7,4 @@ import { Tunebook } from 'src/models/tunebook';
 })
 export class AppComponent {
   title = 'abcTuneBook';
-  selectedTunebook: Tunebook;
 }

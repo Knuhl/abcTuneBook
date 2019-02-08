@@ -1,7 +1,8 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { Tunebook } from 'src/models/tunebook';
-import { MessageService } from '../message.service';
-import { TunebookService } from '../tunebook.service';
+import { Component, OnInit } from '@angular/core';
+import { MessageService } from '../services/message.service';
+import { TunebookApiService } from '../services/tunebook-api.service';
+import { Tunebook } from '../models/tunebook';
+import { TunebookService } from '../services/tunebook.service';
 
 @Component({
   selector: 'app-tunebooks-list',
@@ -9,12 +10,15 @@ import { TunebookService } from '../tunebook.service';
   styleUrls: ['./tunebooks-list.component.scss']
 })
 export class TunebooksListComponent implements OnInit {
-  @Output() tunebookSelected = new EventEmitter<Tunebook>();
 
   tunebooks: Tunebook[];
   selectedTunebook: Tunebook;
 
-  constructor(private messageService: MessageService, private tunebookService: TunebookService) { }
+  constructor(private messageService: MessageService,
+    private tunebookApiService: TunebookApiService,
+    private tunebookService: TunebookService) {
+      this.tunebookService.currentTunebook.subscribe(tb => this.selectedTunebook = tb);
+    }
 
   ngOnInit() {
     this.getTunebookTitles();
@@ -22,7 +26,7 @@ export class TunebooksListComponent implements OnInit {
 
   getTunebookTitles() {
     this.messageService.trace('Getting Tunebook Titles');
-    this.tunebookService.getTunebookTitles().subscribe(titles => {
+    this.tunebookApiService.getTunebookTitles().subscribe(titles => {
       this.messageService.info('Received ' + titles.length + ' Tunebook Titles', titles);
       this.tunebooks = titles;
 
@@ -37,7 +41,7 @@ export class TunebooksListComponent implements OnInit {
 
     if (book && !book.onlyLocal && !book.abcLoaded) {
       this.messageService.trace('Getting Tunebook from API', book);
-      this.tunebookService.getTunebook(book.id).subscribe(dbTunebook => {
+      this.tunebookApiService.getTunebook(book.id).subscribe(dbTunebook => {
         this.messageService.info('Tunebook "' + dbTunebook.title + '" loaded', book.id, dbTunebook);
         dbTunebook.abcLoaded = true;
         const i = this.tunebooks.findIndex(b => b === book);
@@ -50,32 +54,22 @@ export class TunebooksListComponent implements OnInit {
   }
 
   selectTunebook(tunebook: Tunebook) {
-    this.selectedTunebook = tunebook;
-    this.tunebookSelected.emit(tunebook);
+    this.tunebookService.setTunebook(tunebook);
   }
 
   createTunebook(): void {
-    // TODO: create locally, on save -> insert
     this.messageService.trace('Creating new Tunebook locally');
-    const tunebook = new Tunebook(NaN, '(empty)', []);
+    const tunebook = new Tunebook(NaN, '(empty)', '');
     tunebook.onlyLocal = true;
     this.tunebooks.push(tunebook);
     this.selectTunebook(tunebook);
-    // this.tunebookService.createTunebook('(empty)', 'X:1\r\nT:Title\r\nK:E\r\ny\r\n\r\n')
-    //   .subscribe(id => {
-    //     if (id >= 0) {
-    //       this.getTunebookTitles();
-    //       const f = this.tunebooks.find(book => book.id === id);
-    //       this.loadAndSelectTunebook(f);
-    //     }
-    //   });
   }
 
   deleteTunebook(tunebook: Tunebook) {
     this.messageService.trace('deleting tunebook', tunebook);
     if (!tunebook) { return; }
     if (!tunebook.onlyLocal) {
-      this.tunebookService.deleteTunebook(tunebook.id)
+      this.tunebookApiService.deleteTunebook(tunebook.id)
         .subscribe(_ => {
           this.removeTunebookFromList(tunebook);
         });

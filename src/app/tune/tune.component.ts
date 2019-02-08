@@ -1,10 +1,10 @@
-import { Component, OnInit, Input, HostBinding, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
-import { Tune } from '../../models/tune';
-import { Observable, Subject } from 'rxjs';
+import { Component, OnInit, HostBinding } from '@angular/core';
+import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { MessageService } from '../message.service';
-import { TunebookService } from '../tunebook.service';
-import { TunebookParserService } from '../tunebook-parser.service';
+import { MessageService } from '../services/message.service';
+import { TunebookParserService } from '../services/tunebook-parser.service';
+import { Tune } from '../models/tune';
+import { TunebookService } from '../services/tunebook.service';
 
 @Component({
   selector: 'app-tune',
@@ -13,74 +13,75 @@ import { TunebookParserService } from '../tunebook-parser.service';
 })
 export class TuneComponent implements OnInit {
   @HostBinding('class') hostClasses = 'flex-grow-1';
-  @ViewChild('abcPaper') abcPaper: ElementRef;
 
-  private abcInputSubject = new Subject<string>();
-  private abcInputObservable: Observable<string>;
+  showSpinner = true;
+  paperIds: string[];
 
+  private abcInput = new Subject<string>();
+
+  private tune: Tune;
   private _currentAbcValue = '';
   get currentAbcValue() {
     return this._currentAbcValue;
   }
   set currentAbcValue(abc: string) {
-    this._currentAbcValue = abc;
-    this.abcInputSubject.next(abc);
+    console.log('got', JSON.stringify(abc));
+    this._currentAbcValue = abc.replace(/\r/g, '').trim();
+    this.abcInput.next(this._currentAbcValue);
   }
 
-  private _tune: Tune;
-  get tune() {
-    return this._tune;
-  }
-  @Input()
-  set tune(tune: Tune) {
-    this._currentAbcValue = null;
-    this._tune = tune;
-    if (tune) {
-      this.currentAbcValue = tune.abc;
-    }
-  }
 
-  constructor(private messageService: MessageService, private tunebookService: TunebookService,
-    private tunebookParser: TunebookParserService) { }
+  constructor(private messageService: MessageService,
+    private tunebookParser: TunebookParserService,
+    private tunebookService: TunebookService) {
+    this.abcInput.pipe(debounceTime(300)).subscribe((abc: string) => this.renderAbc(abc));
+    this.tunebookService.currentTune.subscribe(t => {
+      this._currentAbcValue = null;
+      this.tune = t;
+      if (t) {
+        this.showSpinner = true;
+        this.currentAbcValue = t.abc;
+      }
+    });
+   }
 
-  ngOnInit() {
-    this.abcInputObservable = this.abcInputSubject.pipe(
-      debounceTime(300)
-    );
-    this.abcInputObservable.subscribe((abc: string) => this.renderAbc(abc));
-  }
+  ngOnInit() {}
 
   renderAbc(abc: string) {
     this.messageService.trace('rendering abc with abcjs', abc);
-    if (!this.abcPaper || !this.abcPaper.nativeElement) {
-      return;
-    }
-    const spinnerHtml = '<div class="text-center mt-5"><i class="fas fa-spinner fa-spin" style="font-size: 15vh;"></i></div>';
     if (abc) {
-      this.abcPaper.nativeElement.innerHTML = spinnerHtml;
       this.messageService.trace('showing spinner, calling abcjs');
-      ABCJS.renderAbc(this.abcPaper.nativeElement, abc,
-      {
-        responsive: 'resize',
-        paddingtop: 0,
-      });
+      this.showSpinner = true;
+      const numberOfTunes = ABCJS.numberOfTunes(abc);
+      this.paperIds = [];
+      for (let i = 1; i <= numberOfTunes; i++) {
+        this.paperIds.push('abcPaper' + i);
+      }
+      setTimeout(() => {
+        ABCJS.renderAbc(this.paperIds, abc,
+          {
+            responsive: 'resize',
+            paddingtop: 0,
+            paddingbottom: 80
+          });
+        this.showSpinner = false;
+      }, 0);
     } else {
       this.messageService.trace('received empty abc-string, showing spinner');
-      this.abcPaper.nativeElement.innerHTML = spinnerHtml;
+      this.showSpinner = true;
     }
   }
 
   saveAbc() {
-    this._tune.abc = this.currentAbcValue;
-    this.tunebookParser.updateTitle(this._tune);
-    this.messageService.trace('saved tune', this._tune);
-    // TODO: Save Tunebook
+    this.tune.abc = this.currentAbcValue;
+    this.tunebookService.saveCurrentTune();
+    this.messageService.trace('saved tune', this.tune);
   }
 
   resetAbc() {
-    this.currentAbcValue = this._tune.abc;
-    this.tunebookParser.updateTitle(this._tune);
+    this.currentAbcValue = this.tune.abc;
+    this.tunebookParser.updateTitle(this.tune);
     this.renderAbc(this.currentAbcValue);
-    this.messageService.trace('reset tune abc', this._tune);
+    this.messageService.trace('reset tune abc', this.tune);
   }
 }
