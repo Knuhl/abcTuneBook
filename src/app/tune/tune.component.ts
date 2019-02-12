@@ -5,6 +5,7 @@ import { MessageService } from '../services/message.service';
 import { TunebookParserService } from '../services/tunebook-parser.service';
 import { Tune } from '../models/tune';
 import { TunebookService } from '../services/tunebook.service';
+import { AbcTransposeService } from '../services/transpose/abc-transpose.service';
 
 @Component({
   selector: 'app-tune',
@@ -33,7 +34,8 @@ export class TuneComponent implements OnInit {
 
   constructor(private messageService: MessageService,
     private tunebookParser: TunebookParserService,
-    private tunebookService: TunebookService) {
+    private tunebookService: TunebookService,
+    private transposeService: AbcTransposeService) {
     this.abcInput.pipe(debounceTime(300)).subscribe((abc: string) => this.renderAbc(abc));
     this.tunebookService.currentTune.subscribe(t => {
       this._currentAbcValue = null;
@@ -83,5 +85,14 @@ export class TuneComponent implements OnInit {
     this.tunebookParser.updateTitle(this.tune);
     this.renderAbc(this.currentAbcValue);
     this.messageService.trace('reset tune abc', this.tune);
+  }
+
+  transposeUp() { this.transpose(true); }
+
+  transposeDown() { this.transpose(false); }
+
+  transpose(up: boolean, preferSharp?: boolean) {
+    const r = this.transposeService.transpose(this._currentAbcValue, up, preferSharp);
+    this.abcInput.next(r);
   }
 }

@@ -1,4 +1,5 @@
 import { Note, NotesHelper } from './note';
+import { AbcKey } from './abc-key';
 
 export class TuneNote {
   note: Note;
@@ -74,26 +75,7 @@ export class TuneNote {
   }
 
   toAbc(): string {
-    const dbl = Math.abs(this.accidentals) > 1;
-    const accChar = this.accidentals > 0 ? '^' : '_';
-    let r = '';
-    if (this.accidentals !== 0) {
-      r = accChar;
-      if (dbl) {
-        r += accChar;
-      }
-    }
-    r += NotesHelper.noteToString(this.note);
-    let localOctave = this.octave;
-    if (localOctave > 0) {
-      r = r.toLowerCase();
-      localOctave--;
-    }
-    const octaveChar = localOctave > 0 ? '\'' : ',';
-    for (let i = 0; i < Math.abs(localOctave); i++) {
-      r += octaveChar;
-    }
-    return r;
+    return NotesHelper.noteToAbc(this.note, this.accidentals, this.octave);
   }
 
   toAdditionalAccidental(): string {
@@ -105,5 +87,43 @@ export class TuneNote {
     }
     r += NotesHelper.noteToString(this.note).toLowerCase();
     return r;
+  }
+
+  transpose(up: boolean): TuneNote {
+    const newNote = new TuneNote(this.note, this.accidentals, this.octave);
+    if (up) {
+      if (newNote.accidentals < 1) {
+        if (newNote.note === Note.E || newNote.note === Note.B) {
+          newNote.note++;
+          newNote.accidentals = 0;
+        } else {
+          newNote.accidentals++;
+        }
+      } else {
+        newNote.note++;
+        newNote.accidentals = 0;
+      }
+      if (newNote.note > Note.B) {
+        newNote.octave++;
+        newNote.note = Note.C;
+      }
+    } else {
+      if (newNote.accidentals > -1) {
+        if (newNote.note === Note.F || newNote.note === Note.C) {
+          newNote.note--;
+          newNote.accidentals = 0;
+        } else {
+          newNote.accidentals--;
+        }
+      } else {
+        newNote.note--;
+        newNote.accidentals = 0;
+      }
+      if (newNote.note < Note.C) {
+        newNote.octave--;
+        newNote.note = Note.B;
+      }
+    }
+    return newNote;
   }
 }
