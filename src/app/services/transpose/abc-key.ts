@@ -1,4 +1,4 @@
-import { Note, NotesHelper } from './note';
+import { Note, NoteAccidental, NotesHelper } from './note';
 import { TuneNote } from './tune-note';
 
 export class AbcKey {
@@ -17,13 +17,15 @@ export class AbcKey {
     6: 0,
   };
 
-  static fromKeyLine(abcKey: string, previousKey: AbcKey): AbcKey {
+  static fromKeyLine(abcKey: string, previousKey: AbcKey, debug?: boolean): AbcKey {
     const keyRegex = /^\s*([CDEFGAB])\s*([#b]?)\s*((?:m|maj|ion|min|aeo|mix|dor|phr|lyd|loc)[^\s]*)?[\s$]*/i;
     const keyAccidentalsRegex = /([\^_=]+[CDEFGAB]{1})(?=\s|$|[\^_=])/ig;
     const additionalsRegex = /\s*(?:\s*[\^_=]+[CDEFGAB]{1})*\s*(.*)/i;
     const keyMatch = abcKey.match(keyRegex);
     if (!keyMatch || !keyMatch[1] || keyMatch[1].length < 1) {
-      console.log('no key found in ' + abcKey);
+      if (debug) {
+        console.log('no key found in ' + abcKey);
+      }
 
       if (!previousKey) {
         return null;
@@ -31,13 +33,18 @@ export class AbcKey {
 
       const keyAccidentalsMatch = abcKey.match(keyAccidentalsRegex);
       if (!keyAccidentalsMatch || keyAccidentalsMatch.length < 1) {
-        console.log('no changed key-values found in ' + abcKey);
+        if (debug) {
+          console.log('no changed key-values found in ' + abcKey);
+        }
         return null;
       } else {
         const add = keyAccidentalsMatch.map(acc => TuneNote.fromAbc(acc));
         const additionsMatch = abcKey.match(additionalsRegex);
         const additions = additionsMatch && additionsMatch[1] ? additionsMatch[1] : '';
         const newKey = new AbcKey(previousKey.note, previousKey.accidental, previousKey.mode, add, additions);
+        if (debug) {
+          console.log('parsed key ' + newKey.keyInAbc() + ' from ' + abcKey, newKey);
+        }
         return newKey;
       }
 
@@ -45,7 +52,6 @@ export class AbcKey {
       const rest = abcKey.substr(keyMatch[0].length);
       const keyAccidentalsMatch = rest.match(keyAccidentalsRegex);
       const additionsMatch = rest.match(additionalsRegex);
-      console.log('matched key values from abc K: line', keyMatch, keyAccidentalsMatch, additionsMatch);
       let additionalAccidentals: TuneNote[] = [];
       if (keyAccidentalsMatch) {
         additionalAccidentals = keyAccidentalsMatch.map(a => TuneNote.fromAbc(a));
@@ -56,6 +62,9 @@ export class AbcKey {
         keyMatch[3],
         additionalAccidentals,
         additionsMatch[1]);
+      if (debug) {
+        console.log('parsed key ' + r.keyInAbc() + ' from ' + abcKey, r);
+      }
       return r;
     }
   }
@@ -134,42 +143,8 @@ export class AbcKey {
     const additionalAccidentals: TuneNote[] = [];
     for (let i = 0; i < this.additionalAccidentals.length; i++) {
       const cur = this.additionalAccidentals[i];
-      const next = new TuneNote(cur.note, cur.accidentals, cur.octave);
       // TODO: Consolidate
-      if (up) {
-        if (next.accidentals !== 0) {
-          if (this.note !== newKey.note || next.accidentals > 0) {
-            next.note++;
-            next.accidentals = 0;
-          } else {
-            next.accidentals++;
-          }
-        } else {
-          if (next.note === Note.E || next.note === Note.B) {
-            next.note++;
-          } else {
-            next.accidentals = 1;
-          }
-        }
-      } else {
-        if (next.accidentals !== 0) {
-          if (this.note !== newKey.note || next.accidentals < 0) {
-            next.note--;
-            next.accidentals = 0;
-          } else {
-            next.accidentals--;
-          }
-        } else {
-          if (next.note === Note.F || next.note === Note.C) {
-            next.note--;
-          } else {
-            next.accidentals = -1;
-          }
-        }
-      }
-
-      if (next.note > Note.B) { next.note = Note.C; } else if (next.note < Note.C) { next.note = Note.B; }
-
+      const next = cur.transpose(up);
       additionalAccidentals.push(next);
     }
     newKey.applyAdditionalKeyAccidentals(additionalAccidentals);
@@ -177,16 +152,33 @@ export class AbcKey {
     return newKey;
   }
 
-  abcRepresentationOfNote(note: TuneNote): string {
+  noteInKey(note: TuneNote): TuneNote {
     const keyAccidentalsForNote = this.changedNotes[note.note];
-    let r = '';
-    if (note.accidentals === 0 && keyAccidentalsForNote !== 0) {
-      r = '=' + NotesHelper.noteToAbc(note.note, note.accidentals, note.octave);
+    let newAccidentals = null;
+    if (note.accidental === null) {
+      if (keyAccidentalsForNote !== 0) {
+        newAccidentals = keyAccidentalsForNote;
+      }
     } else {
-      r = NotesHelper.noteToAbc(note.note, keyAccidentalsForNote - note.accidentals, note.octave);
+      newAccidentals = keyAccidentalsForNote + note.accidental;
+      if (newAccidentals > NoteAccidental.DblSharp) {
+        newAccidentals = NoteAccidental.DblSharp;
+      } else if (newAccidentals < NoteAccidental.DblFlat) {
+        newAccidentals = NoteAccidental.DblFlat;
+      }
     }
-    console.log(note.toAbc() + ' (' + note.accidentals + ') in key ' + this.keyInAbc() + ' is ' + keyAccidentalsForNote + ' = ' + r);
-    return r;
+    return new TuneNote(note.note, newAccidentals, note.octave);
+  }
+
+  abcNoteInKey(note: TuneNote): TuneNote {
+    const keyAccidentalsForNote = this.changedNotes[note.note];
+    const abcNote = new TuneNote(note.note, note.accidental, note.octave);
+    if (abcNote.accidental === null && keyAccidentalsForNote !== 0) {
+      abcNote.accidental = NoteAccidental.Neutral;
+    } else if (abcNote.accidental === keyAccidentalsForNote) {
+      abcNote.accidental = null;
+    }
+    return abcNote;
   }
 
   applyAdditionalKeyAccidentals(additionalAccidentals: TuneNote[]) {
@@ -197,11 +189,16 @@ export class AbcKey {
     this.additionalAccidentals = [];
     for (let i = 0; i < additionalAccidentals.length; i++) {
       const n = additionalAccidentals[i];
-      if (n.note >= 0) {
-        if (n.accidentals === 0) {
+      if (n.note in Note && n.accidental in NoteAccidental) {
+        if (n.accidental === NoteAccidental.Neutral) {
           this.changedNotes[n.note] = 0;
         } else {
-          this.changedNotes[n.note] += n.accidentals;
+          this.changedNotes[n.note] += n.accidental;
+          if (this.changedNotes[n.note] > NoteAccidental.DblSharp) {
+            this.changedNotes[n.note] = NoteAccidental.DblSharp;
+          } else if (this.changedNotes[n.note] < NoteAccidental.DblFlat) {
+            this.changedNotes[n.note] = NoteAccidental.DblFlat;
+          }
         }
         this.additionalAccidentals.push(n);
       }

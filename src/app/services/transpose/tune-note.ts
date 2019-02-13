@@ -1,22 +1,24 @@
-import { Note, NotesHelper } from './note';
-import { AbcKey } from './abc-key';
+import { Note, NoteAccidental, NotesHelper } from './note';
 
 export class TuneNote {
   note: Note;
-  accidentals: number;
+  accidental?: NoteAccidental;
   octave: number;
 
   static fromAbc(noteAbc: string): TuneNote {
-    let accidentals = 0;
+    let accidentals;
     let n = Note.C;
     let octave = 0;
     while (noteAbc.length > 0) {
       switch (noteAbc[0]) {
         case '^':
-          accidentals++;
+          accidentals = accidentals === NoteAccidental.Sharp ? NoteAccidental.DblSharp : NoteAccidental.Sharp;
           break;
         case '_':
-          accidentals--;
+          accidentals = accidentals === NoteAccidental.Flat ? NoteAccidental.DblFlat : NoteAccidental.Flat;
+          break;
+        case '=':
+          accidentals = NoteAccidental.Neutral;
           break;
         case 'c':
         case 'C':
@@ -68,56 +70,66 @@ export class TuneNote {
     return new TuneNote(n, accidentals, octave);
   }
 
-  constructor(note: Note, accidentals: number, octave: number) {
+  constructor(note: Note, accidental?: NoteAccidental, octave?: number) {
     this.note = note;
-    this.accidentals = accidentals;
+    if (accidental in NoteAccidental) {
+      this.accidental = accidental;
+    } else {
+      this.accidental = null;
+    }
+    if (!octave) {
+      octave = 0;
+    }
     this.octave = octave;
   }
 
   toAbc(): string {
-    return NotesHelper.noteToAbc(this.note, this.accidentals, this.octave);
+    return NotesHelper.noteToAbc(this.note, this.accidental, this.octave);
   }
 
   toAdditionalAccidental(): string {
-    const dbl = Math.abs(this.accidentals) > 1;
-    const accChar = this.accidentals === 0 ? '=' : (this.accidentals > 0 ? '^' : '_');
-    let r = accChar;
-    if (dbl) {
-      r += accChar;
-    }
+    let r = NotesHelper.accidentalToString(this.accidental);
     r += NotesHelper.noteToString(this.note).toLowerCase();
     return r;
   }
 
   transpose(up: boolean): TuneNote {
-    const newNote = new TuneNote(this.note, this.accidentals, this.octave);
+    const newNote = new TuneNote(this.note, this.accidental, this.octave);
     if (up) {
-      if (newNote.accidentals < 1) {
-        if (newNote.note === Note.E || newNote.note === Note.B) {
+      if (newNote.accidental !== null) {
+        if ((newNote.accidental >= NoteAccidental.Sharp) ||
+          ((newNote.accidental === NoteAccidental.Neutral) && (newNote.note === Note.E || newNote.note === Note.B))) {
           newNote.note++;
-          newNote.accidentals = 0;
+          newNote.accidental = null;
         } else {
-          newNote.accidentals++;
+          newNote.accidental++;
         }
       } else {
-        newNote.note++;
-        newNote.accidentals = 0;
+        if (newNote.note === Note.E || newNote.note === Note.B) {
+          newNote.note++;
+        } else {
+          newNote.accidental = NoteAccidental.Sharp;
+        }
       }
       if (newNote.note > Note.B) {
         newNote.octave++;
         newNote.note = Note.C;
       }
     } else {
-      if (newNote.accidentals > -1) {
-        if (newNote.note === Note.F || newNote.note === Note.C) {
+      if (newNote.accidental !== null) {
+        if ((newNote.accidental <= NoteAccidental.Flat) ||
+          ((newNote.accidental === NoteAccidental.Neutral) && (newNote.note === Note.F || newNote.note === Note.C))) {
           newNote.note--;
-          newNote.accidentals = 0;
+          newNote.accidental = null;
         } else {
-          newNote.accidentals--;
+          newNote.accidental--;
         }
       } else {
-        newNote.note--;
-        newNote.accidentals = 0;
+        if (newNote.note === Note.F || newNote.note === Note.C) {
+          newNote.note--;
+        } else {
+          newNote.accidental = NoteAccidental.Flat;
+        }
       }
       if (newNote.note < Note.C) {
         newNote.octave--;

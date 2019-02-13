@@ -8,6 +8,14 @@ export enum Note {
   B = 6
 }
 
+export enum NoteAccidental {
+  DblFlat = -2,
+  Flat = -1,
+  Neutral = 0,
+  Sharp = 1,
+  DblSharp = 2,
+}
+
 export class NotesHelper {
   static stringToNote(note: string): Note {
     switch (note.toUpperCase()) {
@@ -34,26 +42,49 @@ export class NotesHelper {
     switch (c) {
       case '^':
       case '_':
+      case '=':
         return true;
       default:
         return false;
     }
   }
 
-  static stringToAccidental(c: string): number {
+  static stringToAccidental(c: string): NoteAccidental {
     switch (c) {
       case '^':
-        return 1;
+        return NoteAccidental.Sharp;
       case '_':
-        return -1;
+        return NoteAccidental.Flat;
+      case '=':
+        return NoteAccidental.Neutral;
       default:
-        return 0;
+        return null;
     }
   }
 
-  static accidentalToKeyString(n: number): string {
-    if (n < 0) { return 'b'; }
-    if (n > 0) { return '#'; }
+  static accidentalToString(n: NoteAccidental): string {
+    switch (n) {
+      case NoteAccidental.Sharp:
+        return '^';
+      case NoteAccidental.DblSharp:
+        return '^^';
+      case NoteAccidental.Flat:
+        return '_';
+      case NoteAccidental.DblFlat:
+        return '__';
+      case NoteAccidental.Neutral:
+        return '=';
+    }
+    return '';
+  }
+
+  static accidentalToKeyString(n: NoteAccidental): string {
+    switch (n) {
+      case NoteAccidental.Sharp:
+        return '#';
+      case NoteAccidental.Flat:
+        return 'b';
+    }
     return '';
   }
 
@@ -91,19 +122,10 @@ export class NotesHelper {
     }
   }
 
-  static noteToAbc(note: Note, accidentals?: number, octave?: number): string {
-    if (!accidentals) { accidentals = 0; }
+  static noteToAbc(note: Note, accidental?: NoteAccidental, octave?: number): string {
     if (!octave) { octave = 0; }
 
-    const dbl = Math.abs(accidentals) > 1;
-    const accChar = accidentals > 0 ? '^' : '_';
-    let r = '';
-    if (accidentals !== 0) {
-      r = accChar;
-      if (dbl) {
-        r += accChar;
-      }
-    }
+    let r = NotesHelper.accidentalToString(accidental);
     r += NotesHelper.noteToString(note);
     if (octave > 0) {
       r = r.toLowerCase();
@@ -137,5 +159,9 @@ export class NotesHelper {
 
   static isAbcNoteChar(c: string): boolean {
     return NotesHelper.isAbcNoteBeginning(c) || NotesHelper.isOctaveChar(c);
+  }
+
+  static isAbcChordBeginning(c: string): boolean {
+    return c === '"';
   }
 }
