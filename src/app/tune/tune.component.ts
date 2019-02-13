@@ -87,12 +87,12 @@ export class TuneComponent implements OnInit {
     this.messageService.trace('reset tune abc', this.tune);
   }
 
-  transposeUp() { this.transpose(true); }
+  transposeUp() { this.transpose(true, true); }
 
-  transposeDown() { this.transpose(false); }
+  transposeDown() { this.transpose(false, true); }
 
   transpose(up: boolean, preferSharp?: boolean) {
     const r = this.transposeService.transpose(this._currentAbcValue, up, preferSharp);
-    this.abcInput.next(r);
+    this.currentAbcValue  = r;
   }
 }

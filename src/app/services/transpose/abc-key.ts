@@ -159,6 +159,8 @@ export class AbcKey {
       if (keyAccidentalsForNote !== 0) {
         newAccidentals = keyAccidentalsForNote;
       }
+    } else if (note.accidental === NoteAccidental.Neutral && keyAccidentalsForNote !== 0) {
+      newAccidentals = NoteAccidental.Neutral;
     } else {
       newAccidentals = keyAccidentalsForNote + note.accidental;
       if (newAccidentals > NoteAccidental.DblSharp) {
@@ -176,6 +178,21 @@ export class AbcKey {
     if (abcNote.accidental === null && keyAccidentalsForNote !== 0) {
       abcNote.accidental = NoteAccidental.Neutral;
     } else if (abcNote.accidental === keyAccidentalsForNote) {
+      abcNote.accidental = null;
+    } else {
+      // e.g. _g in f#
+      // TODO: in chordpro example, too much recursion?
+      if (abcNote.accidental === NoteAccidental.Flat) {
+        const noteToTry = NotesHelper.fixNote(abcNote.note - 1);
+        return this.abcNoteInKey(new TuneNote(noteToTry, NoteAccidental.Sharp, note.octave));
+      } else if (abcNote.accidental === NoteAccidental.Sharp) {
+        const noteToTry = NotesHelper.fixNote(abcNote.note + 1);
+        return this.abcNoteInKey(new TuneNote(noteToTry, NoteAccidental.Flat, note.octave));
+      }
+      abcNote.accidental = abcNote.accidental - keyAccidentalsForNote;
+    }
+
+    if (abcNote.accidental === NoteAccidental.Neutral && keyAccidentalsForNote === 0) {
       abcNote.accidental = null;
     }
     return abcNote;
@@ -223,141 +240,10 @@ export class AbcKey {
   }
 
   private setChangedNotesOfKey() {
-    const acc = this.accidental > 0 ? '#' : (this.accidental < 0 ? 'B' : '');
-    const key = NotesHelper.noteToString(this.note) + acc + this.mode;
-    let sharps = 0;
-    let flats = 0;
-    switch (key) {
-      case 'C#MAJ':
-      case 'A#MIN':
-      case 'G#MIX':
-      case 'D#DOR':
-      case 'E#PHR':
-      case 'F#LYD':
-      case 'B#LOC':
-        sharps = 7;
-        break;
-      case 'F#MAJ':
-      case 'D#MIN':
-      case 'C#MIX':
-      case 'G#DOR':
-      case 'A#PHR':
-      case 'BLYD':
-      case 'E#LOC':
-        sharps = 6;
-        break;
-      case 'BMAJ':
-      case 'G#MIN':
-      case 'F#MIX':
-      case 'C#DOR':
-      case 'D#PHR':
-      case 'ELYD':
-      case 'A#LOC':
-        sharps = 5;
-        break;
-      case 'EMAJ':
-      case 'C#MIN':
-      case 'BMIX':
-      case 'F#DOR':
-      case 'G#PHR':
-      case 'ALYD':
-      case 'D#LOC':
-        sharps = 4;
-        break;
-      case 'AMAJ':
-      case 'F#MIN':
-      case 'EMIX':
-      case 'BDOR':
-      case 'C#PHR':
-      case 'DLYD':
-      case 'G#LOC':
-        sharps = 3;
-        break;
-      case 'DMAJ':
-      case 'BMIN':
-      case 'AMIX':
-      case 'EDOR':
-      case 'F#PHR':
-      case 'GLYD':
-      case 'C#LOC':
-        sharps = 2;
-        break;
-      case 'GMAJ':
-      case 'EMIN':
-      case 'DMIX':
-      case 'ADOR':
-      case 'BPHR':
-      case 'CLYD':
-      case 'F#LOC':
-        sharps = 1;
-        break;
-      case 'FMAJ':
-      case 'DMIN':
-      case 'CMIX':
-      case 'GDOR':
-      case 'APHR':
-      case 'BBLYD':
-      case 'ELOC':
-        flats = 1;
-        break;
-      case 'BBMAJ':
-      case 'GMIN':
-      case 'FMIX':
-      case 'CDOR':
-      case 'DPHR':
-      case 'EBLYD':
-      case 'ALOC':
-        flats = 2;
-        break;
-      case 'EBMAJ':
-      case 'CMIN':
-      case 'BBMIX':
-      case 'FDOR':
-      case 'GPHR':
-      case 'ABLYD':
-      case 'DLOC':
-        flats = 3;
-        break;
-      case 'ABMAJ':
-      case 'FMIN':
-      case 'EBMIX':
-      case 'BBDOR':
-      case 'CPHR':
-      case 'DBLYD':
-      case 'GLOC':
-        flats = 4;
-        break;
-      case 'DBMAJ':
-      case 'BBMIN':
-      case 'ABMIX':
-      case 'EBDOR':
-      case 'FPHR':
-      case 'GBLYD':
-      case 'CLOC':
-        flats = 5;
-        break;
-      case 'GBMAJ':
-      case 'EBMIN':
-      case 'DBMIX':
-      case 'ABDOR':
-      case 'BBPHR':
-      case 'CBLYD':
-      case 'FLOC':
-        flats = 6;
-        break;
-      case 'CBMAJ':
-      case 'ABMIN':
-      case 'GBMIX':
-      case 'DBDOR':
-      case 'EBPHR':
-      case 'FBLYD':
-      case 'BBLOC':
-        flats = 7;
-        break;
-      default:
-        break;
-    }
-    if (sharps > 0) {
+    const accidentals = NotesHelper.accidentalCountOfKey(this.note, this.accidental, this.mode);
+
+    // sharps
+    if (accidentals > 0) {
       const sharpTable = {
         1: 3, // fis
         2: 0, // cis
@@ -367,11 +253,13 @@ export class AbcKey {
         6: 2, // eis
         7: 6 // his
       };
-      for (let i = 1; i <= sharps; i++) {
+      for (let i = 1; i <= accidentals; i++) {
         this.changedNotes[sharpTable[i]]++;
       }
     }
-    if (flats > 0) {
+
+    // flats
+    if (accidentals < 0) {
       const flatTable = {
         1: 6, // b
         2: 2, // es
@@ -381,7 +269,7 @@ export class AbcKey {
         6: 0, // ces
         7: 3 // fes
       };
-      for (let i = 1; i <= flats; i++) {
+      for (let i = 1; i <= Math.abs(accidentals); i++) {
         this.changedNotes[flatTable[i]]--;
       }
     }
