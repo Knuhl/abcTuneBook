@@ -1,7 +1,7 @@
 <!-- fills the rest of the height, is row and has columns stretched to full height -->
 
 <!-- left most, full-height -->
-<div *ngIf="!listCollapsed && selectedTunebook" class="col-lg-2 px-0 d-flex flex-column">
+<div *ngIf="!listCollapsed && selectedTunebook" class="col-lg-2 flex-grow-0 flex-lg-grow-1 px-0">
 
   <form #tunebookForm="ngForm">
 
@@ -56,7 +56,4 @@
   <i class="fas" [class.fa-angle-double-right]="listCollapsed" [class.fa-angle-double-left]="!listCollapsed"></i>
 </button>
 
-<!-- rest of width, full-height -->
-<div class="flex-grow-1 d-flex">
-  <app-tune></app-tune>
-</div>
+<app-tune class="flex-grow-1 d-flex flex-column flex-lg-row"></app-tune>

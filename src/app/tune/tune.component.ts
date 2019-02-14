@@ -1,4 +1,4 @@
-import { Component, OnInit, HostBinding } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { MessageService } from '../services/message.service';
@@ -13,8 +13,6 @@ import { AbcTransposeService } from '../services/transpose/abc-transpose.service
   styleUrls: ['./tune.component.scss']
 })
 export class TuneComponent implements OnInit {
-  @HostBinding('class') hostClasses = 'flex-grow-1';
-
   edit = false;
   tune: Tune;
   showSpinner = true;
@@ -62,9 +60,9 @@ export class TuneComponent implements OnInit {
       setTimeout(() => {
         ABCJS.renderAbc(this.paperIds, abc,
           {
-            responsive: 'resize',
-            paddingtop: 0,
-            paddingbottom: 80
+            responsive: 'full-width',
+            // paddingtop: 0,
+            // paddingbottom: 80
           });
         this.showSpinner = false;
       }, 0);
