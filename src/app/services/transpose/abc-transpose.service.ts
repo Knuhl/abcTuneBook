@@ -1,4 +1,4 @@
-import { Injectable, isDevMode } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Note, NotesHelper } from './note';
 import { TuneNote } from './tune-note';
 import { AbcKey } from './abc-key';
@@ -16,17 +16,16 @@ export class AbcTransposeService {
     const ctx = new TransposeContext();
     ctx.up = up;
     ctx.preferSharp = preferSharp;
-    ctx.debug = isDevMode();
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (line.startsWith('K:')) {
-        const sourceKey = AbcKey.fromKeyLine(line.substr(2), ctx.currentTargetKey, ctx.debug);
+        const sourceKey = AbcKey.fromKeyLine(line.substr(2), ctx.currentTargetKey);
         const transposedKey = sourceKey.transposeKey(up, preferSharp);
         ctx.currentSourceKey = sourceKey;
         ctx.currentTargetKey = transposedKey;
         newLines.push('K:' + transposedKey.keyInAbc());
       } else if (line[1] === ':') {
-        // TODO: filter out N: directives
+        // only care for K: lines, ignore other header directives
         newLines.push(line);
       } else if (line === '%%beginchordpro') {
         ctx.chordProMode = true;
@@ -44,7 +43,7 @@ export class AbcTransposeService {
             // TODO: why does line.indexOf(']', inlineKeyChangeIndex) not work??
             const keyPartLength = line.substr(inlineKeyChangeIndex).indexOf(']') - 3;
             const keyPart = line.substr(inlineKeyChangeIndex + 3, keyPartLength);
-            const sourceKey = AbcKey.fromKeyLine(keyPart, ctx.currentTargetKey, ctx.debug);
+            const sourceKey = AbcKey.fromKeyLine(keyPart, ctx.currentTargetKey);
             const transposedKey = sourceKey.transposeKey(up, preferSharp);
             ctx.currentLineTransposed += '[K:' + transposedKey.keyInAbc() + ']';
             ctx.currentSourceKey = sourceKey;
@@ -60,9 +59,6 @@ export class AbcTransposeService {
       }
     }
     const r = newLines.join('\n');
-    if (ctx.debug) {
-      console.log(abc + '\ntransposed to\n' + r);
-    }
     return r;
   }
 
@@ -70,12 +66,6 @@ export class AbcTransposeService {
     let newLine = '';
     for (let i = 0; i < line.length; i++) {
       const r = this.transposeNext(line, i, ctx);
-      if (ctx.debug) {
-        const prev = line.substr(i, r.traversed);
-        if (prev !== r.result) {
-          console.log(prev + ' became ' + r.result);
-        }
-      }
       newLine += r.result;
       i += (r.traversed - 1);
     }
@@ -88,15 +78,8 @@ export class AbcTransposeService {
     } else if (NotesHelper.isAbcChordBeginning(line[offset])) {
       return this.transposeChord(line, offset, ctx);
     } else {
-      if (ctx.debug) {
-        console.log('ignoring char', line[offset]);
-      }
       return new NoteResult(1, line[offset]);
     }
-
-    // TODO: chords with ".."
-    // TODO: chordProMode = only care for chords
-    // TODO: K:Cb A --> K:C _A in Cb A is Ab, should became A not Ab!
   }
 
   private transposeNote(line: string, offset: number, ctx: TransposeContext): NoteResult {
@@ -122,22 +105,8 @@ export class AbcTransposeService {
     const abcNoteInSourceKey = ctx.currentSourceKey.noteInKey(abcNote);
     const transposedNote = abcNoteInSourceKey.transpose(ctx.up);
 
-    if (ctx.debug) {
-      console.log('note ' +
-        abcNote.toAbc() +
-        ' in key ' +
-        ctx.currentSourceKey.keyInAbc() +
-        ' is ' +
-        abcNoteInSourceKey.toAbc() +
-        ', transposed ' +
-        transposedNote.toAbc());
-    }
     const transposedNoteInKey = ctx.currentTargetKey.abcNoteInKey(transposedNote);
     const r = transposedNoteInKey.toAbc();
-
-    if (ctx.debug) {
-      console.log('note ' + transposedNote.toAbc() + ' in key ' + ctx.currentTargetKey.keyInAbc() + ' is ' + r);
-    }
 
     return new NoteResult(i - offset, r);
   }
@@ -200,5 +169,4 @@ class TransposeContext {
   currentLineTransposed = '';
   up = true;
   preferSharp = true;
-  debug = false;
 }

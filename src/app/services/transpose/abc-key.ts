@@ -17,34 +17,24 @@ export class AbcKey {
     6: 0,
   };
 
-  static fromKeyLine(abcKey: string, previousKey: AbcKey, debug?: boolean): AbcKey {
+  static fromKeyLine(abcKey: string, previousKey: AbcKey): AbcKey {
     const keyRegex = /^\s*([CDEFGAB])\s*([#b]?)\s*((?:m|maj|ion|min|aeo|mix|dor|phr|lyd|loc)[^\s]*)?[\s$]*/i;
     const keyAccidentalsRegex = /([\^_=]+[CDEFGAB]{1})(?=\s|$|[\^_=])/ig;
     const additionalsRegex = /\s*(?:\s*[\^_=]+[CDEFGAB]{1})*\s*(.*)/i;
     const keyMatch = abcKey.match(keyRegex);
     if (!keyMatch || !keyMatch[1] || keyMatch[1].length < 1) {
-      if (debug) {
-        console.log('no key found in ' + abcKey);
-      }
-
       if (!previousKey) {
         return null;
       }
 
       const keyAccidentalsMatch = abcKey.match(keyAccidentalsRegex);
       if (!keyAccidentalsMatch || keyAccidentalsMatch.length < 1) {
-        if (debug) {
-          console.log('no changed key-values found in ' + abcKey);
-        }
         return null;
       } else {
         const add = keyAccidentalsMatch.map(acc => TuneNote.fromAbc(acc));
         const additionsMatch = abcKey.match(additionalsRegex);
         const additions = additionsMatch && additionsMatch[1] ? additionsMatch[1] : '';
         const newKey = new AbcKey(previousKey.note, previousKey.accidental, previousKey.mode, add, additions);
-        if (debug) {
-          console.log('parsed key ' + newKey.keyInAbc() + ' from ' + abcKey, newKey);
-        }
         return newKey;
       }
 
@@ -62,9 +52,6 @@ export class AbcKey {
         keyMatch[3],
         additionalAccidentals,
         additionsMatch[1]);
-      if (debug) {
-        console.log('parsed key ' + r.keyInAbc() + ' from ' + abcKey, r);
-      }
       return r;
     }
   }
@@ -177,19 +164,18 @@ export class AbcKey {
     const abcNote = new TuneNote(note.note, note.accidental, note.octave);
     if (abcNote.accidental === null && keyAccidentalsForNote !== 0) {
       abcNote.accidental = NoteAccidental.Neutral;
-    } else if (abcNote.accidental === keyAccidentalsForNote) {
-      abcNote.accidental = null;
-    } else {
-      // e.g. _g in f#
-      // TODO: in chordpro example, too much recursion?
-      if (abcNote.accidental === NoteAccidental.Flat) {
-        const noteToTry = NotesHelper.fixNote(abcNote.note - 1);
-        return this.abcNoteInKey(new TuneNote(noteToTry, NoteAccidental.Sharp, note.octave));
-      } else if (abcNote.accidental === NoteAccidental.Sharp) {
-        const noteToTry = NotesHelper.fixNote(abcNote.note + 1);
-        return this.abcNoteInKey(new TuneNote(noteToTry, NoteAccidental.Flat, note.octave));
+    } else if (keyAccidentalsForNote !== 0) {
+      if (abcNote.accidental === keyAccidentalsForNote) {
+        abcNote.accidental = null;
+      } else {
+        // e.g. _g in f#
+        if (abcNote.accidental === NoteAccidental.Flat) {
+          return this.abcNoteInKey(new TuneNote(NotesHelper.fixNote(abcNote.note - 1), NoteAccidental.Sharp, note.octave));
+        } else if (abcNote.accidental === NoteAccidental.Sharp) {
+          return this.abcNoteInKey(new TuneNote(NotesHelper.fixNote(abcNote.note + 1), NoteAccidental.Flat, note.octave));
+        }
+        abcNote.accidental = abcNote.accidental - keyAccidentalsForNote;
       }
-      abcNote.accidental = abcNote.accidental - keyAccidentalsForNote;
     }
 
     if (abcNote.accidental === NoteAccidental.Neutral && keyAccidentalsForNote === 0) {

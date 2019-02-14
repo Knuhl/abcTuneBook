@@ -301,14 +301,12 @@ export class NotesHelper {
       default:
         break;
     }
-    // TODO reeval
+
     if (acc === '#') {
       // e.g. G#, try as Ab
-      const nextNote = NotesHelper.fixNote(note + 1);
-      return NotesHelper.accidentalCountOfKey(nextNote, -1, mode);
+      return NotesHelper.accidentalCountOfKey(NotesHelper.fixNote(note + 1), -1, mode);
     } else if (acc === 'B') {
-      const prevNote = NotesHelper.fixNote(note - 1);
-      return NotesHelper.accidentalCountOfKey(prevNote, 1, mode);
+      return NotesHelper.accidentalCountOfKey(NotesHelper.fixNote(note - 1), 1, mode);
     } else {
       throw new Error('could not evaluate count of sharps/flats in key ' + key);
     }

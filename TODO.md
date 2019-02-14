@@ -4,6 +4,10 @@
 * ~~show whole Tunebook above the tunes as a 'selectable tune'~~
 * ~~DELETE tunebook / tune in tunebook~~
 * ~~create tunebook locally, send insert instead of update on save~~
+* Transpose tune up / down
+  * ~~Basic Transposing~~
+  * Add PreferSharps to UI
+  * extract transpose-service to own module / repo
 * Refresh-Button for Tunebook
 * ~~show all tunes of ABC-string in ABC-Rendering (at least for tunebook-view)~~
 * ~~show anything above debug from messageservice in UI~~
